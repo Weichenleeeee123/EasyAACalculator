@@ -10,86 +10,113 @@
     <div class="container">
         <h1>债务计算器</h1>
 
-        <div class="section">
-            <h2>添加成员</h2>
-            <div class="input-group">
-                <input type="text" id="personName" placeholder="输入成员姓名">
-                <button id="addPerson">添加</button>
+        <!-- 标签页导航 -->
+        <div class="tabs">
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="manage">管理成员</button>
+                <button class="tab-btn" data-tab="expense">记录支出</button>
+                <button class="tab-btn" data-tab="records">支出记录</button>
+                <button class="tab-btn" data-tab="summary">债务摘要</button>
+                <button class="tab-btn" data-tab="graph">债务关系图</button>
             </div>
-            <div id="peopleList" class="people-list">
-                <!-- 人员列表将在这里动态生成 -->
-            </div>
-        </div>
 
-        <div class="section">
-            <h2>记录支出</h2>
-            <div class="expense-form">
-                <div class="input-group">
-                    <label for="payer">付款人:</label>
-                    <select id="payer">
-                        <option value="">请选择付款人</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="amount">金额:</label>
-                    <input type="number" id="amount" min="0" step="0.01" placeholder="输入金额">
-                </div>
-                <div class="input-group">
-                    <label for="description">描述:</label>
-                    <input type="text" id="description" placeholder="输入描述（可选）">
-                </div>
-                <div class="input-group">
-                    <label>受益人:</label>
-                    <div id="beneficiaries" class="beneficiaries">
-                        <!-- 受益人选择框将在这里动态生成 -->
+            <!-- 标签页内容 -->
+            <div class="tab-content">
+                <!-- 管理成员标签页 -->
+                <div class="tab-pane active" id="manage-tab">
+                    <div class="section">
+                        <h2>添加成员</h2>
+                        <div class="input-group">
+                            <input type="text" id="personName" placeholder="输入成员姓名">
+                            <button id="addPerson">添加</button>
+                        </div>
+                        <div id="peopleList" class="people-list">
+                            <!-- 人员列表将在这里动态生成 -->
+                        </div>
                     </div>
                 </div>
-                <div class="input-group">
-                    <label>分配方式:</label>
-                    <select id="splitMethod">
-                        <option value="equal">平均分配</option>
-                        <option value="custom">自定义金额</option>
-                    </select>
+
+                <!-- 记录支出标签页 -->
+                <div class="tab-pane" id="expense-tab">
+                    <div class="section">
+                        <h2>记录支出</h2>
+                        <div class="expense-form">
+                            <div class="input-group">
+                                <label for="payer">付款人:</label>
+                                <select id="payer">
+                                    <option value="">请选择付款人</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="amount">金额:</label>
+                                <input type="number" id="amount" min="0" step="0.01" placeholder="输入金额">
+                            </div>
+                            <div class="input-group">
+                                <label for="description">描述:</label>
+                                <input type="text" id="description" placeholder="输入描述（可选）">
+                            </div>
+                            <div class="input-group">
+                                <label>受益人:</label>
+                                <div id="beneficiaries" class="beneficiaries">
+                                    <!-- 受益人选择框将在这里动态生成 -->
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>分配方式:</label>
+                                <select id="splitMethod">
+                                    <option value="equal">平均分配</option>
+                                    <option value="custom">自定义金额</option>
+                                </select>
+                            </div>
+                            <div id="customAmounts" class="custom-amounts" style="display: none;">
+                                <!-- 自定义金额输入框将在这里动态生成 -->
+                            </div>
+                            <button id="addExpense">添加支出</button>
+                        </div>
+                    </div>
                 </div>
-                <div id="customAmounts" class="custom-amounts" style="display: none;">
-                    <!-- 自定义金额输入框将在这里动态生成 -->
+
+                <!-- 支出记录标签页 -->
+                <div class="tab-pane" id="records-tab">
+                    <div class="section">
+                        <h2>支出记录</h2>
+                        <div id="expensesList" class="expenses-list">
+                            <!-- 支出记录将在这里动态生成 -->
+                        </div>
+                    </div>
                 </div>
-                <button id="addExpense">添加支出</button>
-            </div>
-        </div>
 
-        <div class="section">
-            <h2>支出记录</h2>
-            <div id="expensesList" class="expenses-list">
-                <!-- 支出记录将在这里动态生成 -->
-            </div>
-        </div>
+                <!-- 债务摘要标签页 -->
+                <div class="tab-pane" id="summary-tab">
+                    <div class="section">
+                        <h2>债务摘要</h2>
+                        <div id="debtSummary" class="debt-summary">
+                            <!-- 债务摘要将在这里动态生成 -->
+                        </div>
 
-        <div class="section">
-            <h2>债务摘要</h2>
-            <div id="debtSummary" class="debt-summary">
-                <!-- 债务摘要将在这里动态生成 -->
-            </div>
-        </div>
+                        <h2 class="subsection-title">简化债务关系</h2>
+                        <button id="simplifyDebts">简化债务</button>
+                        <div id="simplifiedDebts" class="simplified-debts">
+                            <!-- 简化后的债务关系将在这里动态生成 -->
+                        </div>
+                    </div>
+                </div>
 
-        <div class="section">
-            <h2>简化债务关系</h2>
-            <button id="simplifyDebts">简化债务</button>
-            <div id="simplifiedDebts" class="simplified-debts">
-                <!-- 简化后的债务关系将在这里动态生成 -->
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>债务关系图</h2>
-            <div class="graph-controls">
-                <select id="graphType">
-                    <option value="normal">显示所有债务关系</option>
-                    <option value="simplified">显示简化债务关系</option>
-                </select>
-            </div>
-            <div id="debtGraph" class="debt-graph">
-                <!-- 债务关系图将在这里生成 -->
+                <!-- 债务关系图标签页 -->
+                <div class="tab-pane" id="graph-tab">
+                    <div class="section">
+                        <h2>债务关系图</h2>
+                        <div class="graph-controls">
+                            <select id="graphType">
+                                <option value="normal">显示所有债务关系</option>
+                                <option value="simplified">显示简化债务关系</option>
+                            </select>
+                        </div>
+                        <div id="debtGraph" class="debt-graph">
+                            <!-- 债务关系图将在这里生成 -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

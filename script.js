@@ -20,6 +20,8 @@ const simplifiedDebtsDiv = document.getElementById('simplifiedDebts');
 const graphTypeSelect = document.getElementById('graphType');
 const debtGraphDiv = document.getElementById('debtGraph');
 const clearDataButton = document.getElementById('clearData');
+const tabButtons = document.querySelectorAll('.tab-btn');
+const tabPanes = document.querySelectorAll('.tab-pane');
 
 // 初始化
 function init() {
@@ -36,6 +38,11 @@ function init() {
     simplifyDebtsButton.addEventListener('click', simplifyAndRenderDebts);
     graphTypeSelect.addEventListener('change', updateDebtGraph);
     clearDataButton.addEventListener('click', clearAllData);
+
+    // 标签页切换事件
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => switchTab(button.dataset.tab));
+    });
 }
 
 // 从localStorage加载数据
@@ -80,6 +87,9 @@ function addPerson() {
     updatePayerSelect();
     updateBeneficiariesList();
     updateDebtGraph();
+
+    // 添加成员后切换到记录支出标签页
+    switchTab('expense');
 }
 
 // 渲染人员列表
@@ -317,6 +327,9 @@ function addExpense() {
     renderExpensesList();
     updateDebtSummary();
     updateDebtGraph();
+
+    // 添加支出后切换到支出记录标签页
+    switchTab('records');
 }
 
 // 渲染支出列表
@@ -535,6 +548,9 @@ function simplifyAndRenderDebts() {
 
     // 更新债务关系图
     updateDebtGraph();
+
+    // 简化债务后切换到图表标签页
+    switchTab('graph');
 }
 
 // 简化债务关系算法
@@ -595,6 +611,32 @@ function clearAllData() {
         renderExpensesList();
         updateDebtSummary();
         simplifiedDebtsDiv.innerHTML = '';
+        updateDebtGraph();
+    }
+}
+
+// 切换标签页
+function switchTab(tabId) {
+    // 移除所有标签页按钮的活动状态
+    tabButtons.forEach(btn => btn.classList.remove('active'));
+
+    // 添加当前标签页按钮的活动状态
+    const activeButton = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
+
+    // 隐藏所有标签页内容
+    tabPanes.forEach(pane => pane.classList.remove('active'));
+
+    // 显示当前标签页内容
+    const activePane = document.getElementById(`${tabId}-tab`);
+    if (activePane) {
+        activePane.classList.add('active');
+    }
+
+    // 如果是图表标签页，更新图表
+    if (tabId === 'graph') {
         updateDebtGraph();
     }
 }
