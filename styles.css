@@ -80,12 +80,37 @@ button:hover {
     padding: 15px;
 }
 
-.person-item, .expense-item, .debt-item {
+.person-item, .expense-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 8px 0;
     border-bottom: 1px solid #eee;
+}
+
+.debt-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.debt-info {
+    flex: 1;
+}
+
+.debt-description {
+    font-size: 0.9em;
+    color: #777;
+    margin-top: 4px;
+}
+
+.summary-title {
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #3498db;
+    color: #2c3e50;
 }
 
 .person-item:last-child, .expense-item:last-child, .debt-item:last-child {

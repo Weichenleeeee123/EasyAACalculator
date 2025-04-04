@@ -388,28 +388,52 @@ function updateDebtSummary() {
         return;
     }
 
-    // 计算每个人的净余额
-    const balances = calculateBalances();
+    // 创建一个标题
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'summary-title';
+    titleDiv.innerHTML = '<strong>每笔支出的详细债务关系：</strong>';
+    debtSummaryDiv.appendChild(titleDiv);
 
-    // 计算债务关系
-    const debts = calculateDebts(balances);
+    // 显示每笔支出的详细债务关系
+    let hasDebts = false;
 
-    if (debts.length === 0) {
-        debtSummaryDiv.innerHTML = '<p>所有人都已结清</p>';
-        return;
-    }
+    expenses.forEach(expense => {
+        const payerName = people.find(p => p.id === expense.payer)?.name || '未知';
 
-    // 显示债务关系
-    debts.forEach(debt => {
-        const debtItem = document.createElement('div');
-        debtItem.className = 'debt-item';
+        // 为每个受益人创建债务项
+        expense.beneficiaries.forEach(beneficiary => {
+            if (beneficiary.id !== expense.payer && beneficiary.amount > 0) {
+                hasDebts = true;
+                const beneficiaryName = people.find(p => p.id === beneficiary.id)?.name || '未知';
 
-        const fromName = people.find(p => p.id === debt.from)?.name || '未知';
-        const toName = people.find(p => p.id === debt.to)?.name || '未知';
+                const debtItem = document.createElement('div');
+                debtItem.className = 'debt-item';
 
-        debtItem.textContent = `${fromName} 需要支付 ${toName} ¥${debt.amount.toFixed(2)}`;
-        debtSummaryDiv.appendChild(debtItem);
+                // 创建左侧信息区
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'debt-info';
+
+                // 添加债务关系
+                const relationDiv = document.createElement('div');
+                relationDiv.textContent = `${beneficiaryName} 需要支付 ${payerName} ¥${beneficiary.amount.toFixed(2)}`;
+
+                // 添加支出描述
+                const descriptionDiv = document.createElement('div');
+                descriptionDiv.className = 'debt-description';
+                descriptionDiv.textContent = `原因: ${expense.description}`;
+
+                infoDiv.appendChild(relationDiv);
+                infoDiv.appendChild(descriptionDiv);
+                debtItem.appendChild(infoDiv);
+
+                debtSummaryDiv.appendChild(debtItem);
+            }
+        });
     });
+
+    if (!hasDebts) {
+        debtSummaryDiv.innerHTML = '<p>所有人都已结清</p>';
+    }
 }
 
 // 计算每个人的净余额
