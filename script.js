@@ -1,30 +1,61 @@
 // 数据存储
 let people = [];
 let expenses = [];
+let settledDebts = []; // 已结清的债务
 
 // DOM元素
-const personNameInput = document.getElementById('personName');
-const addPersonButton = document.getElementById('addPerson');
-const peopleListDiv = document.getElementById('peopleList');
-const payerSelect = document.getElementById('payer');
-const amountInput = document.getElementById('amount');
-const descriptionInput = document.getElementById('description');
-const beneficiariesDiv = document.getElementById('beneficiaries');
-const splitMethodSelect = document.getElementById('splitMethod');
-const customAmountsDiv = document.getElementById('customAmounts');
-const addExpenseButton = document.getElementById('addExpense');
-const expensesListDiv = document.getElementById('expensesList');
-const debtSummaryDiv = document.getElementById('debtSummary');
-const simplifyDebtsButton = document.getElementById('simplifyDebts');
-const simplifiedDebtsDiv = document.getElementById('simplifiedDebts');
-const graphTypeSelect = document.getElementById('graphType');
-const debtGraphDiv = document.getElementById('debtGraph');
-const clearDataButton = document.getElementById('clearData');
-const tabButtons = document.querySelectorAll('.tab-btn');
-const tabPanes = document.querySelectorAll('.tab-pane');
+let personNameInput;
+let addPersonButton;
+let peopleListDiv;
+let payersDiv;
+let payerAmountsContainer;
+let payerAmountsDiv;
+let amountInput;
+let descriptionInput;
+let beneficiariesDiv;
+let splitMethodSelect;
+let customAmountsDiv;
+let addExpenseButton;
+let expensesListDiv;
+let debtSummaryDiv;
+let simplifyDebtsButton;
+let simplifiedDebtsDiv;
+let graphTypeSelect;
+let debtGraphDiv;
+let clearDataButton;
+let tabButtons;
+let tabPanes;
+
+// 初始化DOM元素
+function initDOMElements() {
+    personNameInput = document.getElementById('personName');
+    addPersonButton = document.getElementById('addPerson');
+    peopleListDiv = document.getElementById('peopleList');
+    payersDiv = document.getElementById('payers');
+    payerAmountsContainer = document.getElementById('payerAmountsContainer');
+    payerAmountsDiv = document.getElementById('payerAmounts');
+    amountInput = document.getElementById('amount');
+    descriptionInput = document.getElementById('description');
+    beneficiariesDiv = document.getElementById('beneficiaries');
+    splitMethodSelect = document.getElementById('splitMethod');
+    customAmountsDiv = document.getElementById('customAmounts');
+    addExpenseButton = document.getElementById('addExpense');
+    expensesListDiv = document.getElementById('expensesList');
+    debtSummaryDiv = document.getElementById('debtSummary');
+    simplifyDebtsButton = document.getElementById('simplifyDebts');
+    simplifiedDebtsDiv = document.getElementById('simplifiedDebts');
+    graphTypeSelect = document.getElementById('graphType');
+    debtGraphDiv = document.getElementById('debtGraph');
+    clearDataButton = document.getElementById('clearData');
+    tabButtons = document.querySelectorAll('.tab-btn');
+    tabPanes = document.querySelectorAll('.tab-pane');
+}
 
 // 初始化
 function init() {
+    // 初始化DOM元素
+    initDOMElements();
+
     loadData();
     renderPeopleList();
     renderExpensesList();
@@ -41,7 +72,9 @@ function init() {
 
     // 标签页切换事件
     tabButtons.forEach(button => {
-        button.addEventListener('click', () => switchTab(button.dataset.tab));
+        button.addEventListener('click', function() {
+            switchTab(this.getAttribute('data-tab'));
+        });
     });
 }
 
@@ -49,6 +82,7 @@ function init() {
 function loadData() {
     const savedPeople = localStorage.getItem('debtCalculator_people');
     const savedExpenses = localStorage.getItem('debtCalculator_expenses');
+    const savedSettledDebts = localStorage.getItem('debtCalculator_settledDebts');
 
     if (savedPeople) {
         people = JSON.parse(savedPeople);
@@ -57,12 +91,17 @@ function loadData() {
     if (savedExpenses) {
         expenses = JSON.parse(savedExpenses);
     }
+
+    if (savedSettledDebts) {
+        settledDebts = JSON.parse(savedSettledDebts);
+    }
 }
 
 // 保存数据到localStorage
 function saveData() {
     localStorage.setItem('debtCalculator_people', JSON.stringify(people));
     localStorage.setItem('debtCalculator_expenses', JSON.stringify(expenses));
+    localStorage.setItem('debtCalculator_settledDebts', JSON.stringify(settledDebts));
 }
 
 // 添加人员
@@ -87,9 +126,6 @@ function addPerson() {
     updatePayerSelect();
     updateBeneficiariesList();
     updateDebtGraph();
-
-    // 添加成员后切换到记录支出标签页
-    switchTab('expense');
 }
 
 // 渲染人员列表
@@ -142,14 +178,94 @@ function deletePerson(id) {
 
 // 更新付款人选择框
 function updatePayerSelect() {
-    payerSelect.innerHTML = '<option value="">请选择付款人</option>';
+    payersDiv.innerHTML = '';
+    payerAmountsDiv.innerHTML = '';
+
+    if (people.length === 0) {
+        payersDiv.innerHTML = '<p>暂无成员，请先添加成员</p>';
+        return;
+    }
 
     people.forEach(person => {
-        const option = document.createElement('option');
-        option.value = person.id;
-        option.textContent = person.name;
-        payerSelect.appendChild(option);
+        // 付款人复选框
+        const payerItem = document.createElement('div');
+        payerItem.className = 'payer-item';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `payer-${person.id}`;
+        checkbox.value = person.id;
+        checkbox.addEventListener('change', updatePayerAmounts);
+
+        const label = document.createElement('label');
+        label.htmlFor = `payer-${person.id}`;
+        label.textContent = person.name;
+
+        payerItem.appendChild(checkbox);
+        payerItem.appendChild(label);
+        payersDiv.appendChild(payerItem);
+
+        // 付款人金额输入框
+        const payerAmountItem = document.createElement('div');
+        payerAmountItem.className = 'payer-amount-item';
+        payerAmountItem.id = `payer-amount-container-${person.id}`;
+        payerAmountItem.style.display = 'none';
+
+        const payerAmountLabel = document.createElement('label');
+        payerAmountLabel.htmlFor = `payer-amount-${person.id}`;
+        payerAmountLabel.textContent = `${person.name} 的付款金额:`;
+
+        const payerAmountInput = document.createElement('input');
+        payerAmountInput.type = 'number';
+        payerAmountInput.id = `payer-amount-${person.id}`;
+        payerAmountInput.min = '0';
+        payerAmountInput.step = '0.01';
+        payerAmountInput.placeholder = '输入金额';
+        payerAmountInput.addEventListener('input', updateTotalAmount);
+
+        payerAmountItem.appendChild(payerAmountLabel);
+        payerAmountItem.appendChild(payerAmountInput);
+        payerAmountsDiv.appendChild(payerAmountItem);
     });
+}
+
+// 更新付款人金额输入框显示
+function updatePayerAmounts() {
+    let hasSelectedPayers = false;
+
+    people.forEach(person => {
+        const checkbox = document.getElementById(`payer-${person.id}`);
+        const payerAmountContainer = document.getElementById(`payer-amount-container-${person.id}`);
+
+        if (checkbox && payerAmountContainer) {
+            const isChecked = checkbox.checked;
+            payerAmountContainer.style.display = isChecked ? 'flex' : 'none';
+
+            if (isChecked) {
+                hasSelectedPayers = true;
+            }
+        }
+    });
+
+    payerAmountsContainer.style.display = hasSelectedPayers ? 'flex' : 'none';
+    updateTotalAmount();
+}
+
+// 更新总金额
+function updateTotalAmount() {
+    let total = 0;
+
+    people.forEach(person => {
+        const checkbox = document.getElementById(`payer-${person.id}`);
+
+        if (checkbox && checkbox.checked) {
+            const amountInput = document.getElementById(`payer-amount-${person.id}`);
+            const amount = parseFloat(amountInput.value) || 0;
+            total += amount;
+        }
+    });
+
+    amountInput.value = total.toFixed(2);
 }
 
 // 更新受益人列表
@@ -230,19 +346,48 @@ function updateCustomAmounts() {
 
 // 添加支出
 function addExpense() {
-    const payer = payerSelect.value;
     const amount = parseFloat(amountInput.value);
     const description = descriptionInput.value.trim() || '未命名支出';
     const splitMethod = splitMethodSelect.value;
 
+    // 获取付款人及其付款金额
+    const payers = [];
+    let totalPayerAmount = 0;
+
+    people.forEach(person => {
+        const checkbox = document.getElementById(`payer-${person.id}`);
+
+        if (checkbox && checkbox.checked) {
+            const payerAmountInput = document.getElementById(`payer-amount-${person.id}`);
+            const payerAmount = parseFloat(payerAmountInput.value) || 0;
+
+            if (payerAmount <= 0) {
+                alert(`请为 ${person.name} 输入有效的付款金额`);
+                return;
+            }
+
+            payers.push({
+                id: person.id,
+                amount: payerAmount
+            });
+
+            totalPayerAmount += payerAmount;
+        }
+    });
+
     // 验证输入
-    if (!payer) {
-        alert('请选择付款人');
+    if (payers.length === 0) {
+        alert('请选择至少一个付款人');
         return;
     }
 
     if (isNaN(amount) || amount <= 0) {
         alert('请输入有效金额');
+        return;
+    }
+
+    if (Math.abs(totalPayerAmount - amount) > 0.01) {
+        alert(`付款人金额总和 (${totalPayerAmount.toFixed(2)}) 必须等于总金额 (${amount.toFixed(2)})`);
         return;
     }
 
@@ -299,7 +444,7 @@ function addExpense() {
     // 创建支出记录
     const expense = {
         id: Date.now().toString(),
-        payer,
+        payers,
         amount,
         description,
         date: new Date().toISOString(),
@@ -310,16 +455,26 @@ function addExpense() {
     saveData();
 
     // 重置表单
-    payerSelect.value = '';
     amountInput.value = '';
     descriptionInput.value = '';
     people.forEach(person => {
-        const checkbox = document.getElementById(`beneficiary-${person.id}`);
-        if (checkbox) checkbox.checked = false;
+        // 重置付款人
+        const payerCheckbox = document.getElementById(`payer-${person.id}`);
+        if (payerCheckbox) payerCheckbox.checked = false;
+
+        const payerAmountInput = document.getElementById(`payer-amount-${person.id}`);
+        if (payerAmountInput) payerAmountInput.value = '';
+
+        // 重置受益人
+        const beneficiaryCheckbox = document.getElementById(`beneficiary-${person.id}`);
+        if (beneficiaryCheckbox) beneficiaryCheckbox.checked = false;
 
         const customAmountInput = document.getElementById(`custom-amount-${person.id}`);
         if (customAmountInput) customAmountInput.value = '';
     });
+
+    // 隐藏付款人金额输入框
+    payerAmountsContainer.style.display = 'none';
 
     splitMethodSelect.value = 'equal';
     customAmountsDiv.style.display = 'none';
@@ -345,12 +500,20 @@ function renderExpensesList() {
         const expenseItem = document.createElement('div');
         expenseItem.className = 'expense-item';
 
-        const payerName = people.find(p => p.id === expense.payer)?.name || '未知';
+        // 获取付款人信息
+        const payersText = expense.payers.map(p => {
+            const name = people.find(person => person.id === p.id)?.name || '未知';
+            return `${name}: ¥${p.amount.toFixed(2)}`;
+        }).join(', ');
 
         const infoDiv = document.createElement('div');
 
         const descriptionP = document.createElement('p');
-        descriptionP.innerHTML = `<strong>${expense.description}</strong> - ${payerName} 支付了 ¥${expense.amount.toFixed(2)}`;
+        descriptionP.innerHTML = `<strong>${expense.description}</strong> - 总金额: ¥${expense.amount.toFixed(2)}`;
+
+        const payersP = document.createElement('p');
+        payersP.className = 'small';
+        payersP.textContent = `付款人: ${payersText}`;
 
         const beneficiariesP = document.createElement('p');
         beneficiariesP.className = 'small';
@@ -367,6 +530,7 @@ function renderExpensesList() {
         dateP.textContent = new Date(expense.date).toLocaleString();
 
         infoDiv.appendChild(descriptionP);
+        infoDiv.appendChild(payersP);
         infoDiv.appendChild(beneficiariesP);
         infoDiv.appendChild(dateP);
 
@@ -411,36 +575,66 @@ function updateDebtSummary() {
     let hasDebts = false;
 
     expenses.forEach(expense => {
-        const payerName = people.find(p => p.id === expense.payer)?.name || '未知';
+        // 为每个付款人和受益人创建债务项
+        expense.payers.forEach(payer => {
+            const payerName = people.find(p => p.id === payer.id)?.name || '未知';
 
-        // 为每个受益人创建债务项
-        expense.beneficiaries.forEach(beneficiary => {
-            if (beneficiary.id !== expense.payer && beneficiary.amount > 0) {
-                hasDebts = true;
-                const beneficiaryName = people.find(p => p.id === beneficiary.id)?.name || '未知';
+            expense.beneficiaries.forEach(beneficiary => {
+                // 计算该受益人应支付给该付款人的金额
+                // 按比例分配：该付款人的付款比例 * 该受益人的受益金额
+                const payerRatio = payer.amount / expense.amount;
+                const debtAmount = beneficiary.amount * payerRatio;
 
-                const debtItem = document.createElement('div');
-                debtItem.className = 'debt-item';
+                // 检查该债务是否已结清
+                const isSettled = isDebtSettled(expense.id, payer.id, beneficiary.id);
 
-                // 创建左侧信息区
-                const infoDiv = document.createElement('div');
-                infoDiv.className = 'debt-info';
+                if (beneficiary.id !== payer.id && debtAmount > 0.01 && !isSettled) {
+                    hasDebts = true;
+                    const beneficiaryName = people.find(p => p.id === beneficiary.id)?.name || '未知';
 
-                // 添加债务关系
-                const relationDiv = document.createElement('div');
-                relationDiv.textContent = `${beneficiaryName} 需要支付 ${payerName} ¥${beneficiary.amount.toFixed(2)}`;
+                    const debtItem = document.createElement('div');
+                    debtItem.className = 'debt-item';
 
-                // 添加支出描述
-                const descriptionDiv = document.createElement('div');
-                descriptionDiv.className = 'debt-description';
-                descriptionDiv.textContent = `原因: ${expense.description}`;
+                    // 创建左侧信息区
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'debt-info';
 
-                infoDiv.appendChild(relationDiv);
-                infoDiv.appendChild(descriptionDiv);
-                debtItem.appendChild(infoDiv);
+                    // 添加债务关系
+                    const relationDiv = document.createElement('div');
+                    relationDiv.textContent = `${beneficiaryName} 需要支付 ${payerName} ¥${debtAmount.toFixed(2)}`;
 
-                debtSummaryDiv.appendChild(debtItem);
-            }
+                    // 添加支出描述
+                    const descriptionDiv = document.createElement('div');
+                    descriptionDiv.className = 'debt-description';
+                    descriptionDiv.textContent = `原因: ${expense.description}`;
+
+                    infoDiv.appendChild(relationDiv);
+                    infoDiv.appendChild(descriptionDiv);
+                    debtItem.appendChild(infoDiv);
+
+                    // 添加操作按钮区
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'debt-actions';
+
+                    // 标记为已结清按钮
+                    const settleButton = document.createElement('button');
+                    settleButton.className = 'settle-btn';
+                    settleButton.textContent = '标记为已结清';
+                    settleButton.addEventListener('click', () => markDebtAsSettled(expense.id, payer.id, beneficiary.id));
+
+                    // 删除按钮
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'danger small';
+                    deleteButton.textContent = '删除';
+                    deleteButton.addEventListener('click', () => deleteExpense(expense.id));
+
+                    actionsDiv.appendChild(settleButton);
+                    actionsDiv.appendChild(deleteButton);
+                    debtItem.appendChild(actionsDiv);
+
+                    debtSummaryDiv.appendChild(debtItem);
+                }
+            });
         });
     });
 
@@ -461,7 +655,9 @@ function calculateBalances() {
     // 计算每个人的净余额
     expenses.forEach(expense => {
         // 付款人增加余额
-        balances[expense.payer] += expense.amount;
+        expense.payers.forEach(payer => {
+            balances[payer.id] += payer.amount;
+        });
 
         // 受益人减少余额
         expense.beneficiaries.forEach(beneficiary => {
@@ -548,9 +744,6 @@ function simplifyAndRenderDebts() {
 
     // 更新债务关系图
     updateDebtGraph();
-
-    // 简化债务后切换到图表标签页
-    switchTab('graph');
 }
 
 // 简化债务关系算法
@@ -606,6 +799,7 @@ function clearAllData() {
     if (confirm('确定要清除所有数据吗？此操作不可撤销！')) {
         people = [];
         expenses = [];
+        settledDebts = [];
         saveData();
         renderPeopleList();
         renderExpensesList();
@@ -613,6 +807,36 @@ function clearAllData() {
         simplifiedDebtsDiv.innerHTML = '';
         updateDebtGraph();
     }
+}
+
+// 标记债务为已结清
+function markDebtAsSettled(expenseId, payerId, beneficiaryId) {
+    // 创建一个已结清的债务记录
+    const settledDebt = {
+        expenseId,
+        payerId,
+        beneficiaryId,
+        settledDate: new Date().toISOString()
+    };
+
+    // 添加到已结清债务列表
+    settledDebts.push(settledDebt);
+    saveData();
+
+    // 更新债务摘要显示
+    updateDebtSummary();
+    updateDebtGraph();
+
+    alert('该债务已标记为已结清');
+}
+
+// 检查债务是否已结清
+function isDebtSettled(expenseId, payerId, beneficiaryId) {
+    return settledDebts.some(debt =>
+        debt.expenseId === expenseId &&
+        debt.payerId === payerId &&
+        debt.beneficiaryId === beneficiaryId
+    );
 }
 
 // 切换标签页

@@ -151,6 +151,27 @@ button:hover {
     flex: 1;
 }
 
+.debt-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.settle-btn {
+    background-color: #27ae60;
+    font-size: 0.9em;
+    padding: 5px 10px;
+}
+
+.settle-btn:hover {
+    background-color: #219653;
+}
+
+button.small {
+    font-size: 0.8em;
+    padding: 4px 8px;
+}
+
 .debt-description {
     font-size: 0.9em;
     color: #777;
@@ -168,16 +189,34 @@ button:hover {
     border-bottom: none;
 }
 
-.beneficiaries {
+.beneficiaries, .payers {
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin-top: 10px;
 }
 
-.beneficiary-item {
+.beneficiary-item, .payer-item {
     display: flex;
     align-items: center;
+}
+
+.payer-amounts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.payer-amount-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.payer-amount-item label {
+    width: 150px;
+    margin-right: 10px;
 }
 
 .custom-amounts {

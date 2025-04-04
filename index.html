@@ -42,10 +42,16 @@
                         <h2>记录支出</h2>
                         <div class="expense-form">
                             <div class="input-group">
-                                <label for="payer">付款人:</label>
-                                <select id="payer">
-                                    <option value="">请选择付款人</option>
-                                </select>
+                                <label>付款人:</label>
+                                <div id="payers" class="payers">
+                                    <!-- 付款人选择框将在这里动态生成 -->
+                                </div>
+                            </div>
+                            <div class="input-group" id="payerAmountsContainer" style="display: none;">
+                                <label>付款金额:</label>
+                                <div id="payerAmounts" class="payer-amounts">
+                                    <!-- 付款人金额输入框将在这里动态生成 -->
+                                </div>
                             </div>
                             <div class="input-group">
                                 <label for="amount">金额:</label>
