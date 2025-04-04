@@ -71,9 +71,19 @@ function init() {
     clearDataButton.addEventListener('click', clearAllData);
 
     // 标签页切换事件
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            switchTab(this.getAttribute('data-tab'));
+    document.querySelectorAll('.tab-btn').forEach(button => {
+        // 移除可能存在的旧事件监听器
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+
+        // 添加新的事件监听器
+        newButton.addEventListener('click', function(event) {
+            event.preventDefault(); // 防止默认行为
+            const tabId = this.getAttribute('data-tab');
+            console.log('Tab button clicked:', tabId);
+            if (tabId) {
+                switchTab(tabId);
+            }
         });
     });
 }
@@ -841,28 +851,88 @@ function isDebtSettled(expenseId, payerId, beneficiaryId) {
 
 // 切换标签页
 function switchTab(tabId) {
+    console.log('Switching to tab:', tabId); // 调试日志
+
+    // 防止空值
+    if (!tabId) {
+        console.error('Tab ID is empty');
+        return;
+    }
+
+    // 重新获取所有标签页元素，确保我们有最新的引用
+    const allTabButtons = document.querySelectorAll('.tab-btn');
+    const allTabPanes = document.querySelectorAll('.tab-pane');
+
     // 移除所有标签页按钮的活动状态
-    tabButtons.forEach(btn => btn.classList.remove('active'));
+    allTabButtons.forEach(btn => {
+        btn.classList.remove('active');
+        console.log('Removed active from button:', btn.getAttribute('data-tab'));
+    });
 
     // 添加当前标签页按钮的活动状态
     const activeButton = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
     if (activeButton) {
         activeButton.classList.add('active');
+        console.log('Added active to button:', tabId);
+    } else {
+        console.error('Active button not found for tab:', tabId);
     }
 
     // 隐藏所有标签页内容
-    tabPanes.forEach(pane => pane.classList.remove('active'));
+    allTabPanes.forEach(pane => {
+        pane.classList.remove('active');
+        console.log('Removed active from pane:', pane.id);
+    });
 
     // 显示当前标签页内容
     const activePane = document.getElementById(`${tabId}-tab`);
     if (activePane) {
         activePane.classList.add('active');
+        console.log('Added active to pane:', activePane.id);
+    } else {
+        console.error('Active pane not found for tab:', tabId);
     }
 
     // 如果是图表标签页，更新图表
     if (tabId === 'graph') {
-        updateDebtGraph();
+        console.log('Updating debt graph');
+        // 清除图表并重新创建
+        debtGraphDiv.innerHTML = '';
+        setTimeout(() => {
+            updateDebtGraph();
+        }, 100);
     }
+}
+
+// 获取所有原始债务
+function getAllOriginalDebts() {
+    const originalDebts = [];
+
+    expenses.forEach(expense => {
+        expense.payers.forEach(payer => {
+            const payerId = payer.id;
+
+            expense.beneficiaries.forEach(beneficiary => {
+                // 计算该受益人应支付给该付款人的金额
+                const payerRatio = payer.amount / expense.amount;
+                const debtAmount = beneficiary.amount * payerRatio;
+
+                // 检查该债务是否已结清
+                const isSettled = isDebtSettled(expense.id, payerId, beneficiary.id);
+
+                if (beneficiary.id !== payerId && debtAmount > 0.01 && !isSettled) {
+                    originalDebts.push({
+                        from: beneficiary.id,
+                        to: payerId,
+                        amount: debtAmount,
+                        description: expense.description
+                    });
+                }
+            });
+        });
+    });
+
+    return originalDebts;
 }
 
 // 更新债务关系图
@@ -874,12 +944,24 @@ function updateDebtGraph() {
         return;
     }
 
+    // 设置图表尺寸 - 在这里先定义width和height
+    const width = debtGraphDiv.clientWidth;
+    const height = 600; // 固定高度
+
     // 计算每个人的净余额
     const balances = calculateBalances();
 
     // 获取债务关系
-    const isSimplified = graphTypeSelect.value === 'simplified';
-    const debts = isSimplified ? simplifyDebts(balances) : calculateDebts(balances);
+    const graphType = graphTypeSelect.value;
+    let debts = [];
+
+    if (graphType === 'simplified') {
+        // 简化债务关系
+        debts = simplifyDebts(balances);
+    } else {
+        // 所有原始债务 (默认)
+        debts = getAllOriginalDebts();
+    }
 
     if (debts.length === 0) {
         debtGraphDiv.innerHTML = '<p>所有人都已结清</p>';
@@ -892,19 +974,37 @@ function updateDebtGraph() {
     const nodeMap = {};
 
     // 创建节点
-    people.forEach(person => {
+    people.forEach((person, index) => {
         // 只包含有债务关系的人
         const isInvolved = debts.some(debt => debt.from === person.id || debt.to === person.id);
         if (isInvolved) {
+            // 设置节点的初始位置，使用圆形布局
+            const angle = (index / people.length) * 2 * Math.PI;
+            const radius = Math.min(width, height) * 0.35;
+
             const node = {
                 id: person.id,
                 name: person.name,
-                balance: balances[person.id] || 0
+                balance: balances[person.id] || 0,
+                // 设置初始位置
+                x: width / 2 + radius * Math.cos(angle),
+                y: height / 2 + radius * Math.sin(angle),
+                // 固定初始位置
+                fx: width / 2 + radius * Math.cos(angle),
+                fy: height / 2 + radius * Math.sin(angle)
             };
             nodes.push(node);
             nodeMap[person.id] = node;
         }
     });
+
+    // 在模拟开始后释放固定位置
+    setTimeout(() => {
+        nodes.forEach(node => {
+            node.fx = null;
+            node.fy = null;
+        });
+    }, 2000);
 
     // 创建连接
     debts.forEach(debt => {
@@ -915,9 +1015,8 @@ function updateDebtGraph() {
         });
     });
 
-    // 设置图表尺寸
-    const width = debtGraphDiv.clientWidth;
-    const height = 400;
+    // 设置图表尺寸 - 使用上面已定义的width和height
+    // 这里不需要重新定义
 
     // 创建SVG元素
     const svg = d3.select('#debtGraph')
@@ -925,14 +1024,72 @@ function updateDebtGraph() {
         .attr('width', width)
         .attr('height', height);
 
+    // 添加缩放功能
+    const g = svg.append('g');
+
+    // 创建缩放行为
+    const zoom = d3.zoom()
+        .scaleExtent([0.1, 10]) // 设置缩放范围
+        .on('zoom', (event) => {
+            g.attr('transform', event.transform);
+        });
+
+    // 应用缩放行为到SVG
+    svg.call(zoom);
+
+    // 添加缩放控制按钮
+    const zoomControls = d3.select('#debtGraph')
+        .append('div')
+        .attr('class', 'zoom-controls');
+
+    zoomControls.append('button')
+        .attr('class', 'zoom-btn')
+        .text('+')
+        .on('click', () => {
+            svg.transition().duration(300).call(zoom.scaleBy, 1.5);
+        });
+
+    zoomControls.append('button')
+        .attr('class', 'zoom-btn')
+        .text('-')
+        .on('click', () => {
+            svg.transition().duration(300).call(zoom.scaleBy, 0.75);
+        });
+
+    zoomControls.append('button')
+        .attr('class', 'zoom-btn')
+        .text('重置')
+        .on('click', () => {
+            svg.transition().duration(300).call(zoom.transform, d3.zoomIdentity);
+        });
+
     // 创建力导向图
     const simulation = d3.forceSimulation(nodes)
-        .force('link', d3.forceLink(links).id(d => d.id).distance(150))
-        .force('charge', d3.forceManyBody().strength(-300))
-        .force('center', d3.forceCenter(width / 2, height / 2));
+        // 连接力，使相连的节点保持距离
+        .force('link', d3.forceLink(links)
+            .id(d => d.id)
+            .distance(250) // 连接线的目标长度
+            .strength(0.3)) // 连接力的强度
+        // 排斥力，使节点互相排斥
+        .force('charge', d3.forceManyBody()
+            .strength(-1500) // 排斥力强度
+            .distanceMin(50) // 最小生效距离
+            .distanceMax(500)) // 最大生效距离
+        // 碰撞力，防止节点重叠
+        .force('collide', d3.forceCollide()
+            .radius(100) // 碰撞半径
+            .strength(1) // 碰撞力强度
+            .iterations(3)) // 计算迭代次数
+        // 中心力，将节点拉向中心
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        // 设置初始温度和衰减速度
+        .alpha(0.8) // 初始温度
+        .alphaDecay(0.005) // 衰减速度
+        .alphaMin(0.001) // 最小温度
+        .velocityDecay(0.4); // 速度衰减系数（模拟摩擦）
 
     // 绘制连接线
-    const link = svg.append('g')
+    const link = g.append('g')
         .selectAll('line')
         .data(links)
         .enter()
@@ -941,16 +1098,100 @@ function updateDebtGraph() {
         .attr('stroke-width', d => Math.sqrt(d.value) * 0.5);
 
     // 添加债务金额标签
-    const linkText = svg.append('g')
-        .selectAll('text')
-        .data(links)
+    // 对相同起点和终点的连接进行分组
+    const linkGroups = {};
+    links.forEach((link, index) => {
+        // 创建唯一的连接键，确保相同节点对之间的连接分到同一组
+        let key;
+        if (typeof link.source === 'object' && typeof link.target === 'object') {
+            // 对于已经解析的对象
+            key = link.source.id < link.target.id ?
+                `${link.source.id}-${link.target.id}` :
+                `${link.target.id}-${link.source.id}`;
+        } else {
+            // 对于字符串ID
+            key = link.source < link.target ?
+                `${link.source}-${link.target}` :
+                `${link.target}-${link.source}`;
+        }
+
+        if (!linkGroups[key]) {
+            linkGroups[key] = [];
+        }
+        linkGroups[key].push({link, index});
+    });
+
+    // 为每个连接组创建合并的标签
+    const mergedLabels = [];
+
+    Object.keys(linkGroups).forEach(key => {
+        const group = linkGroups[key];
+        if (group.length > 0) {
+            // 获取第一个连接的源和目标
+            const firstLink = group[0].link;
+
+            // 创建合并的标签数据
+            const labelData = {
+                source: firstLink.source,
+                target: firstLink.target,
+                values: group.map(item => item.link.value),
+                total: group.reduce((sum, item) => sum + item.link.value, 0)
+            };
+
+            mergedLabels.push(labelData);
+        }
+    });
+
+    // 创建标签容器
+    const labelGroups = g.append('g')
+        .selectAll('g')
+        .data(mergedLabels)
+        .enter()
+        .append('g')
+        .attr('class', 'debt-label-group');
+
+    // 为每个标签组添加背景
+    labelGroups.append('rect')
+        .attr('class', 'debt-label-bg')
+        .attr('rx', 4)
+        .attr('ry', 4);
+
+    // 为每个债务金额创建文本元素
+    labelGroups.selectAll('text.debt-amount:not(.total)')
+        .data(d => d.values.map(value => ({ value, parent: d })))
         .enter()
         .append('text')
         .attr('class', 'debt-amount')
+        .attr('dy', (_d, i) => i * 16) // 每行文本的垂直偏移
         .text(d => `¥${d.value.toFixed(2)}`);
 
+    // 添加总计行（如果有多个债务）
+    labelGroups.filter(d => d.values.length > 1)
+        .append('text')
+        .attr('class', 'debt-amount total')
+        .attr('dy', d => d.values.length * 16)
+        .text(d => `总计: ¥${d.total.toFixed(2)}`);
+
+    // 计算并设置背景矩形的尺寸
+    labelGroups.each(function() {
+        const group = d3.select(this);
+        const textElements = group.selectAll('text');
+        let maxWidth = 0;
+        let totalHeight = 0;
+
+        textElements.each(function() {
+            const bbox = this.getBBox();
+            maxWidth = Math.max(maxWidth, bbox.width);
+            totalHeight = Math.max(totalHeight, bbox.y + bbox.height);
+        });
+
+        group.select('rect')
+            .attr('width', maxWidth + 10)
+            .attr('height', totalHeight + 5);
+    });
+
     // 创建节点组
-    const node = svg.append('g')
+    const node = g.append('g')
         .selectAll('.node')
         .data(nodes)
         .enter()
@@ -963,13 +1204,16 @@ function updateDebtGraph() {
 
     // 添加节点圆圈
     node.append('circle')
-        .attr('r', 10)
-        .attr('fill', d => d.balance > 0 ? '#2ecc71' : d.balance < 0 ? '#e74c3c' : '#3498db');
+        .attr('r', 20) // 增大半径
+        .attr('fill', d => d.balance > 0 ? '#2ecc71' : d.balance < 0 ? '#e74c3c' : '#3498db')
+        .attr('stroke', '#fff')
+        .attr('stroke-width', 2);
 
     // 添加节点文本标签
     node.append('text')
-        .attr('dx', 15)
+        .attr('dx', 25) // 增加偏移，距离节点更远
         .attr('dy', 5)
+        .attr('class', 'node-label')
         .text(d => `${d.name} (${d.balance > 0 ? '+' : ''}${d.balance.toFixed(2)})`)
         .attr('font-weight', d => Math.abs(d.balance) > 0.01 ? 'bold' : 'normal');
 
@@ -981,9 +1225,55 @@ function updateDebtGraph() {
             .attr('x2', d => d.target.x)
             .attr('y2', d => d.target.y);
 
-        linkText
-            .attr('x', d => (d.source.x + d.target.x) / 2)
-            .attr('y', d => (d.source.y + d.target.y) / 2);
+        // 更新标签组的位置
+        labelGroups.attr('transform', d => {
+            // 获取源和目标节点的坐标
+            let sourceX, sourceY, targetX, targetY;
+
+            if (typeof d.source === 'object') {
+                sourceX = d.source.x;
+                sourceY = d.source.y;
+            } else {
+                // 如果还没有解析为对象，尝试从节点数组中查找
+                const sourceNode = nodes.find(node => node.id === d.source);
+                if (sourceNode) {
+                    sourceX = sourceNode.x;
+                    sourceY = sourceNode.y;
+                }
+            }
+
+            if (typeof d.target === 'object') {
+                targetX = d.target.x;
+                targetY = d.target.y;
+            } else {
+                // 如果还没有解析为对象，尝试从节点数组中查找
+                const targetNode = nodes.find(node => node.id === d.target);
+                if (targetNode) {
+                    targetX = targetNode.x;
+                    targetY = targetNode.y;
+                }
+            }
+
+            // 如果没有有效坐标，返回默认位置
+            if (sourceX === undefined || sourceY === undefined || targetX === undefined || targetY === undefined) {
+                return 'translate(0,0)';
+            }
+
+            // 计算连接线中点
+            const midX = (sourceX + targetX) / 2;
+            const midY = (sourceY + targetY) / 2;
+
+            // 获取标签组的尺寸
+            const group = d3.select(this);
+            const rect = group.select('rect').node();
+            const bbox = rect ? rect.getBBox() : { width: 0, height: 0 };
+
+            // 计算偏移，使标签居中
+            const offsetX = -bbox.width / 2;
+            const offsetY = -bbox.height / 2;
+
+            return `translate(${midX + offsetX},${midY + offsetY})`;
+        });
 
         node
             .attr('transform', d => `translate(${d.x}, ${d.y})`);
@@ -991,20 +1281,68 @@ function updateDebtGraph() {
 
     // 拖拽函数
     function dragstarted(event, d) {
+        // 当开始拖拽时，重启模拟并增加温度
         if (!event.active) simulation.alphaTarget(0.3).restart();
+        // 固定节点位置
         d.fx = d.x;
         d.fy = d.y;
+        // 增加节点的半径，使其更明显
+        d3.select(this).select('circle').transition().duration(200).attr('r', 25);
     }
 
     function dragged(event, d) {
+        // 将节点位置设置为鼠标位置
         d.fx = event.x;
         d.fy = event.y;
     }
 
     function dragended(event, d) {
+        // 当拖拽结束时，降低模拟温度
         if (!event.active) simulation.alphaTarget(0);
-        d.fx = null;
-        d.fy = null;
+        // 保持节点在拖动后的位置
+        d.fx = d.x;
+        d.fy = d.y;
+        // 恢复节点的厚度
+        d3.select(this).select('circle').transition().duration(200).attr('r', 20);
+    }
+}
+
+// 直接切换标签页的函数（供 HTML 中的 onclick 事件调用）
+function switchTabDirect(tabId) {
+    console.log('Direct tab switch to:', tabId);
+
+    // 防止空值
+    if (!tabId) return;
+
+    // 移除所有标签页按钮的活动状态
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // 添加当前标签页按钮的活动状态
+    const activeButton = document.querySelector(`.tab-btn[onclick*="'${tabId}'"`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
+
+    // 隐藏所有标签页内容
+    document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.remove('active');
+    });
+
+    // 显示当前标签页内容
+    const activePane = document.getElementById(`${tabId}-tab`);
+    if (activePane) {
+        activePane.classList.add('active');
+    }
+
+    // 如果是图表标签页，更新图表
+    if (tabId === 'graph') {
+        // 清除图表并重新创建
+        debtGraphDiv.innerHTML = '';
+        setTimeout(() => {
+            updateDebtGraph();
+        }, 100);
     }
 }
 

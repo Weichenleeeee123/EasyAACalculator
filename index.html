@@ -13,11 +13,11 @@
         <!-- 标签页导航 -->
         <div class="tabs">
             <div class="tab-nav">
-                <button class="tab-btn active" data-tab="manage">管理成员</button>
-                <button class="tab-btn" data-tab="expense">记录支出</button>
-                <button class="tab-btn" data-tab="records">支出记录</button>
-                <button class="tab-btn" data-tab="summary">债务摘要</button>
-                <button class="tab-btn" data-tab="graph">债务关系图</button>
+                <button class="tab-btn active" onclick="switchTabDirect('manage')">管理成员</button>
+                <button class="tab-btn" onclick="switchTabDirect('expense')">记录支出</button>
+                <button class="tab-btn" onclick="switchTabDirect('records')">支出记录</button>
+                <button class="tab-btn" onclick="switchTabDirect('summary')">债务摘要</button>
+                <button class="tab-btn" onclick="switchTabDirect('graph')">债务关系图</button>
             </div>
 
             <!-- 标签页内容 -->
@@ -114,7 +114,7 @@
                         <h2>债务关系图</h2>
                         <div class="graph-controls">
                             <select id="graphType">
-                                <option value="normal">显示所有债务关系</option>
+                                <option value="all">显示所有原始债务</option>
                                 <option value="simplified">显示简化债务关系</option>
                             </select>
                         </div>
