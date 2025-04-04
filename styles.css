@@ -1,0 +1,148 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+h2 {
+    color: #3498db;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+}
+
+.section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.input-group {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.input-group label {
+    width: 100px;
+    font-weight: bold;
+}
+
+input, select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    flex: 1;
+}
+
+button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+.people-list, .expenses-list, .debt-summary, .simplified-debts {
+    margin-top: 15px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    padding: 15px;
+}
+
+.person-item, .expense-item, .debt-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.person-item:last-child, .expense-item:last-child, .debt-item:last-child {
+    border-bottom: none;
+}
+
+.beneficiaries {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.beneficiary-item {
+    display: flex;
+    align-items: center;
+}
+
+.custom-amounts {
+    margin-top: 15px;
+}
+
+.custom-amount-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.custom-amount-item label {
+    width: 150px;
+}
+
+.actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.danger {
+    background-color: #e74c3c;
+}
+
+.danger:hover {
+    background-color: #c0392b;
+}
+
+@media (max-width: 600px) {
+    .input-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .input-group label {
+        margin-bottom: 5px;
+    }
+    
+    input, select {
+        width: 100%;
+    }
+}
