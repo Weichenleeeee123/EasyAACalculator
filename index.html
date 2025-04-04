@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <h1>债务计算器</h1>
-        
+
         <div class="section">
             <h2>添加成员</h2>
             <div class="input-group">
@@ -20,7 +20,7 @@
                 <!-- 人员列表将在这里动态生成 -->
             </div>
         </div>
-        
+
         <div class="section">
             <h2>记录支出</h2>
             <div class="expense-form">
@@ -57,21 +57,21 @@
                 <button id="addExpense">添加支出</button>
             </div>
         </div>
-        
+
         <div class="section">
             <h2>支出记录</h2>
             <div id="expensesList" class="expenses-list">
                 <!-- 支出记录将在这里动态生成 -->
             </div>
         </div>
-        
+
         <div class="section">
             <h2>债务摘要</h2>
             <div id="debtSummary" class="debt-summary">
                 <!-- 债务摘要将在这里动态生成 -->
             </div>
         </div>
-        
+
         <div class="section">
             <h2>简化债务关系</h2>
             <button id="simplifyDebts">简化债务</button>
@@ -79,12 +79,26 @@
                 <!-- 简化后的债务关系将在这里动态生成 -->
             </div>
         </div>
-        
+
+        <div class="section">
+            <h2>债务关系图</h2>
+            <div class="graph-controls">
+                <select id="graphType">
+                    <option value="normal">显示所有债务关系</option>
+                    <option value="simplified">显示简化债务关系</option>
+                </select>
+            </div>
+            <div id="debtGraph" class="debt-graph">
+                <!-- 债务关系图将在这里生成 -->
+            </div>
+        </div>
+
         <div class="actions">
             <button id="clearData" class="danger">清除所有数据</button>
         </div>
     </div>
-    
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

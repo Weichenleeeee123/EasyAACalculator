@@ -73,7 +73,7 @@ button:hover {
     background-color: #2980b9;
 }
 
-.people-list, .expenses-list, .debt-summary, .simplified-debts {
+.people-list, .expenses-list, .debt-summary, .simplified-debts, .debt-graph {
     margin-top: 15px;
     background-color: #f9f9f9;
     border-radius: 4px;
@@ -118,6 +118,37 @@ button:hover {
     width: 150px;
 }
 
+.graph-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.debt-graph {
+    height: 400px;
+    position: relative;
+}
+
+.node {
+    cursor: pointer;
+}
+
+.link {
+    stroke: #999;
+    stroke-opacity: 0.6;
+}
+
+.node text {
+    font-size: 12px;
+    fill: #333;
+}
+
+.debt-amount {
+    font-size: 10px;
+    fill: #e74c3c;
+    font-weight: bold;
+}
+
 .actions {
     display: flex;
     justify-content: center;
@@ -137,11 +168,11 @@ button:hover {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .input-group label {
         margin-bottom: 5px;
     }
-    
+
     input, select {
         width: 100%;
     }
