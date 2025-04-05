@@ -17,7 +17,7 @@
                 <button class="tab-btn" onclick="switchTabDirect('expense')">记录支出</button>
                 <button class="tab-btn" onclick="switchTabDirect('records')">支出记录</button>
                 <button class="tab-btn" onclick="switchTabDirect('summary')">债务摘要</button>
-                <button class="tab-btn" onclick="switchTabDirect('graph')">债务关系图</button>
+
             </div>
 
             <!-- 标签页内容 -->
@@ -108,21 +108,7 @@
                     </div>
                 </div>
 
-                <!-- 债务关系图标签页 -->
-                <div class="tab-pane" id="graph-tab">
-                    <div class="section">
-                        <h2>债务关系图</h2>
-                        <div class="graph-controls">
-                            <select id="graphType">
-                                <option value="all">显示所有原始债务</option>
-                                <option value="simplified">显示简化债务关系</option>
-                            </select>
-                        </div>
-                        <div id="debtGraph" class="debt-graph">
-                            <!-- 债务关系图将在这里生成 -->
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
 

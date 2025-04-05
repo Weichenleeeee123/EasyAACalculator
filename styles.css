@@ -239,75 +239,11 @@ button.small {
     margin-bottom: 15px;
 }
 
-.debt-graph {
-    height: 600px; /* 增加高度 */
-    position: relative;
-    margin-top: 20px;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    overflow: hidden;
-}
 
-.zoom-controls {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    display: flex;
-    gap: 5px;
-    z-index: 100;
-}
 
-.zoom-btn {
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    font-weight: bold;
-    background-color: rgba(255, 255, 255, 0.8);
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-}
 
-.zoom-btn:hover {
-    background-color: #e0e0e0;
-}
 
-.node {
-    cursor: pointer;
-}
 
-.link {
-    stroke: #999;
-    stroke-opacity: 0.6;
-}
-
-.node-label {
-    font-size: 14px;
-    fill: #333;
-    font-weight: bold;
-    text-shadow: 0 0 3px white, 0 0 3px white, 0 0 3px white, 0 0 3px white;
-}
-
-.debt-amount {
-    font-size: 10px;
-    fill: #e74c3c;
-    font-weight: bold;
-    text-anchor: middle;
-}
-
-.debt-amount.total {
-    font-weight: bold;
-    fill: #c0392b;
-}
-
-.debt-label-bg {
-    fill: rgba(255, 255, 255, 0.9);
-    stroke: #ddd;
-    stroke-width: 1px;
-}
 
 .actions {
     display: flex;
